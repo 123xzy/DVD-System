@@ -2,38 +2,44 @@
 #include<stdlib.h>
 #include<string.h>
 #include "list.h"
-#define TSIZE 45
 int main()
 {
-	char choice1;
+	char choice;
 	for (;;)
 	{
 		system("cls");
-		menu1();
-		choice1 = getchar_s();
-		while (choice1 > '7' || choice1 < '1')
+		Menu1();
+		choice = getchar_s();
+		while (choice > '6' || choice < '1')
 		{
 			printf("请输入正确的选择（1-6）:");
-			choice1 = getchar_s();
+			choice = getchar_s();
 		}
-		if (choice1 == '1')
+		if (choice == '1')
 		{
-			user_login();
-			main_user();
+			Users_Login();
+			UI();
 		}
-		else if (choice1 == '2')
-		{user_register(); main_user();}
-		else if (choice1 == '3')
-			find();
-		else if (choice1 == '4')
-			alter();
-		else if (choice1 == '5')
-			show();
-		else if (choice1 == '6')
-			Addfilm();
-		else if (choice1 == '7')
+		else if (choice == '2')
 		{
-			printf("确定退出系统（按任意键退出）");
+			Users_Regis(); UI();
+		}
+		else if (choice == '3')
+			Find_Film();
+		else if (choice == '4')
+		{
+			Film_Infor();
+			printf("按任意键退出浏览"); 
+			getchar();
+		}
+		else if (choice == '5')
+		{
+			Admin_Login();
+			AdminI();
+		}
+		else if (choice == '6')
+		{
+			printf("按任意键退出系统");
 			getchar();
 			exit(1); 
 		}

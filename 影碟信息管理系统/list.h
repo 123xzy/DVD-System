@@ -1,16 +1,18 @@
 #ifndef FILM_H
 #include<stdio.h>
 #define MAXN 105
-typedef struct film    /*影碟信息*/
+/*影碟信息*/
+typedef struct film    
 {
 	char name[MAXN];    //影碟名称
 	char national[MAXN];//国家
 	int  type;           //类型
-	int  account;        //数量
+	int  quantity;        //数量
 	char dir[MAXN];     //导演
 	int  year;       //上映年份
 }FILM;
 
+/*用户信息*/
 typedef struct user
 {
 	char account[MAXN];
@@ -18,49 +20,64 @@ typedef struct user
 	
 }USER;
 
-;
+/*借阅信息*/
+typedef struct userfilm
+{
+	char account[MAXN];
+	char name[MAXN];
+	int year;
+	int month;
+	int day;
+	struct userfilm* next;
+}Userfilm;
 
-/*登录界面：显示用户登录，影碟修改，退出系统*/
-void menu1();
+/*登录界面*/
+void Menu1();
 
-/*用户界面：显示查找，借阅，归还，退出*/
-void menu2();
+/*用户界面：查找，借阅，归还*/
+void Menu2();
 
-/*会员登录操作：输入用户名，密码*/
-void user_login();
+/*管理员界面：影碟修改，录入*/
+void Menu3();
 
-/*用户*/
-void main_user();
+/*用户登录操作：输入用户名，密码*/
+void Users_Login();
+
+/*管理员登录操作*/
+void Admin_Login();
+
+/*用户界面*/
+void UI();
+
+/*管理员界面*/
+void AdminI();
 
 /*注册用户信息*/
-void user_register();
+void Users_Regis();
 
 /*找回密码*/
-void find_password(char*,int);
+void PassW_Retri(int);
 
 /*添加影碟信息*/
 void Addfilm();
 
 /*输出所有影碟信息*/
-void show();
+void Film_Infor();
 
-/*操作：根据图书名称查询有关电影*/
-void find();
+/*操作：根据影碟名称查询有关电影*/
+void Find_Film();
 
-/*展现用户信息（密码，借阅图书）*/
-void show_user();
+/*展现用户信息（密码，借阅影碟）*/
+void User_Infor();
 
-/*借书*/
-void rent();
+/*借阅影碟*/
+void Rent_Film();
 
-/*还书*/
-void back();
+/*归还影碟*/
+void Return_Film();
 
 /*修改影碟信息*/
-void alter();
-
-/*删除影碟,采用链表*/
-void del();
+void Alter_Film();
 
 /*自定义getchar()函数*/
 char getchar_s();
