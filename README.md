@@ -1,5 +1,14 @@
 # DVD Information Management System
 
-This is the final assignment for my programming class,I did it for weeks.\n
+程序设计课的期末大作业
 
-However,It still has bugs.You can ponit them out
+主要功能：
+1.用户登录，注册，找回密码
+2.影碟信息录入，查找，添加，浏览，修改
+3.用户借阅，归还
+4.管理员修改，浏览信息
+
+涉及知识：
+1.数组等基本操作
+2.文件操作
+3.链表的删除
