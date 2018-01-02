@@ -53,7 +53,7 @@ void UI();
 void AdminI();
 
 /*注册用户信息*/
-void Users_Regis();
+bool Users_Regis();
 
 /*找回密码*/
 void PassW_Retri(int);
@@ -61,14 +61,14 @@ void PassW_Retri(int);
 /*添加影碟信息*/
 void Addfilm();
 
-/*输出所有影碟信息*/
+/*输出所有影碟信息Wu*/
 void Film_Infor();
 
-/*操作：根据影碟名称查询有关电影*/
+/*查询有关电影Wu*/
 void Find_Film();
 
-/*展现用户信息（密码，借阅影碟）*/
-void User_Infor();
+/*展现指定用户信息（密码，借阅影碟）*/
+void User_Infor(char*);
 
 /*借阅影碟*/
 void Rent_Film();

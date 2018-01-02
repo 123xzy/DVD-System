@@ -22,7 +22,7 @@ int main()
 		}
 		else if (choice == '2')
 		{
-			Users_Regis(); UI();
+			if(Users_Regis()) UI();
 		}
 		else if (choice == '3')
 			Find_Film();

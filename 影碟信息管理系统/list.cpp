@@ -3,13 +3,15 @@
 #include<Windows.h>
 #include<time.h>
 #include "list.h"
-#define KEY 1999  
+#define KEY "1999"  
 
 /*是否循环*/
 static bool judge();
 
 /*计算相隔几天*/
 static int Total_Days(int year, int month, int days);
+static int Sum(int, int, int);
+static void alter(char*, int);
 
 FILM filmlist[MAXN];  //所有影碟信息
 FILE *fp;
@@ -44,9 +46,10 @@ void Menu3()
 	printf("*********管理员界面**********\n");
 	printf("      1.影碟信息修改\n");
 	printf("      2.影碟信息录入\n");
-	printf("      3.退出管理员界面\n");
+	printf("      3.查询借阅信息\n");
+	printf("      4.退出管理员界面\n");
 	printf("****************************\n");
-	printf("请选择（1-3）：");
+	printf("请选择（1-4）：");
 }
 void Users_Login()
 {
@@ -113,11 +116,10 @@ void Users_Login()
 }
 void Admin_Login()
 {
-	int code;
+	char code[MAXN];
 	printf("输入KEY：");
-	scanf("%d", &code);
-	getchar();
-	while (code != KEY) { scanf("%d", &code); printf("验证码错误！"); }
+	gets_s(code);
+	while (strcmp(code,KEY)) { printf("验证码错误！请重新输入：");gets_s(code);  }
 	printf("登录成功！正在跳转...");
 	Sleep(500);
 	return;
@@ -136,7 +138,7 @@ void UI()
 		}
 		switch (choice)
 		{
-		case'1':User_Infor(); break;
+		case'1':User_Infor(User.account); break;
 		case'2':Rent_Film(); break;
 		case'3':Return_Film(); break;
 		case'4':return;
@@ -150,7 +152,7 @@ void AdminI()
 		system("cls");
 		Menu3();
 		choice = getchar_s();
-		while (choice > '3' || choice < '1')
+		while (choice > '4' || choice < '1')
 		{
 			printf("请输入正确的选择:");
 			choice = getchar_s();
@@ -159,27 +161,31 @@ void AdminI()
 		{
 		case'1':Alter_Film(); break;
 		case'2':Addfilm(); break;
-		case'3':printf("按任意键退出管理员系统");getchar(); return;
+		case'3':User_Infor("Admin"); break;
+		case'4':printf("按任意键退出管理员系统");getchar(); return;
 		}
 	}
 }
-void Users_Regis()
+bool Users_Regis()
 {
-	int flag=1,num;
+	int num;
 	fp = fopen("user_date.txt", "r+");
 	for (num = 1; !feof(fp); num++)
 		fscanf(fp, "%s%s", user[num].account, user[num].password);
 	printf("输入新的用户名：");
-	while(flag) {
+	for(;;) {
+		int i;
 		scanf("%s", User.account);
-		for (int i = 1; i <= num; i++)
+		for (i = 1; i <= num; i++)
 		{
+			//重复注册
 			if (!strcmp(User.account, user[i].account))
 			{
-				printf("该用户名已经存在！请重新输入！"); break;
+				printf("该用户名已经存在！请重新输入："); 
+				break;
 			}
-			else flag = 0;
 		}
+		if (i > num)break;
 	}
 	printf("输入新的密码：");
 	scanf("%s", User.password);
@@ -188,10 +194,11 @@ void Users_Regis()
 	if (judge())
 	{
 		fprintf(fp, "%s %s\n", User.account,User.password);
+		printf("注册成功！");
 		fclose(fp);
-		printf("注册成功！"); printf("正在跳转..."); Sleep(700);
+		printf("正在跳转..."); Sleep(700); return true;
 	}
-	else printf("注册失败！"); fclose(fp);
+	else { printf("注册失败！"); Sleep(500); fclose(fp); return false; }
 }
 void PassW_Retri(int i)
 {
@@ -230,14 +237,14 @@ void Addfilm()
 {
 	FILM newfilm;
 	int  num;
-	fp = fopen("film_date.txt", "a+");
 	for (;;)
 	{
+		fp = fopen("film_date.txt", "a+");
 		printf("请输入影碟名称：");
 		scanf("%s", newfilm.name);
 		printf("请输入国家：");
 		scanf("%s", newfilm.national);
-		printf("请输入类型:1-爱情 2-动作：");
+		printf("请输入类型1.Comedy 2.Action 3.Romance 4.Sci-Fi 5.Horror 6.Documentary");
 		scanf("%d", &newfilm.type);
 		printf("请输入数量：");
 		scanf("%d", &newfilm.quantity);
@@ -260,21 +267,47 @@ void Addfilm()
 }
 void Film_Infor()
 {
-	int num=0;
-	fp = fopen("film_date.txt", "r");
-	while (!feof(fp))
+	FILM* p=filmlist;
+	int i,num=1;
+	FILE*fp = fopen("film_date.txt", "r");
+	if (fp == NULL) 
 	{
-		num++;
-		fscanf(fp, "%s%s%d%d%s%d\n", filmlist[num].name, filmlist[num].national, &filmlist[num].type, &filmlist[num].quantity, filmlist[num].dir, &filmlist[num].year);
+		printf("fialed"); exit(1);
 	}
-	if (num == 0)printf("当前库存为零");
-	else {
-		printf("*******************图书信息*******************\n");
-		printf("编号  影碟名  国家  类型  数量  导演  上映时间\n");
-		for(int i=1;i<=num;i++)
-			printf("%-5d%-10s%5s%5d%5d%10s%5d\n",i, filmlist[i].name, filmlist[i].national, filmlist[i].type, filmlist[i].quantity, filmlist[i].dir, filmlist[i].year);
+
+	//读取文件
+	for (i=0; !feof(fp);i++)
+		fscanf(fp, "%s%s%d%d%s%d\n", filmlist[i].name, filmlist[i].national, &filmlist[i].type, &filmlist[i].quantity, filmlist[i].dir, &filmlist[i].year);
+	
+	printf("编号  影碟名   国家    类型     数量  导演  上映时间\n");
+	for (num,p=filmlist; p < filmlist + i; p++,num++)
+	{
+		printf("%-5d%-8s%5s", num,p->name, p->national);
+		switch (p->type)
+		{
+		case 1:
+			printf("   Comedy  ");
+			break;
+		case 2:
+			printf("   Action  ");
+			break;
+		case 3:
+			printf("   Romance ");
+			break;
+		case 4: 
+			printf("   Sci-Fi  ");
+			break;
+		case 5:
+			printf("   Horror  ");
+			break;
+		case 6:
+			printf("Documentary");
+			break;
+		}
+		printf("%5d%8s%6d\n", p->quantity, p->dir, p->year);
 	}
 	fclose(fp);
+	return;
 }
 void Find_Film()
 {
@@ -338,11 +371,12 @@ void Find_Film()
 		}
 	}
 }
-void User_Infor()
+void User_Infor(char *Account)
 {
 	FILE*fp = fopen("rent_back.txt", "rb");
 	struct userfilm*head=NULL,*current,*prev;
 	int num = 0;
+
 	//将文件中已有信息形成链表
 	while(!feof(fp))//读到文件结尾
 	{
@@ -350,18 +384,28 @@ void User_Infor()
 		if(fread(current, sizeof(userfilm), 1, fp)==0)break;
 		if(head ==NULL)head=current;  
 		else prev->next=current;   
-		current->next = NULL;                    //表明这是链表最后一项
-		prev = current;                           //current完成使命，即成为上一项
+		current->next = NULL;    //表明这是链表最后一项                
+		prev = current;          //current完成使命，即成为上一项                
 	}
-	//打印链表信息
+
 	current = head;
-	while (current!= NULL){
-		//输出当前用户的借阅信息 
-		if(!strcmp(current->account,User.account))
-			printf("%d %s %s %d年%d月%d日\n",++num, current->account, current->name, current->year, current->month, current->day);
+	//以管理员身份进入
+	if (!strcmp("Admin", Account))
+	{
+		while (current != NULL)
+		{
+			printf("%d %s %s %d年%d月%d日\n", ++num, current->account, current->name, current->year, current->month, current->day);
+			current = current->next;
+		}
+	}
+	//输出当前用户的借阅信息 
+	else while (current != NULL)
+	{
+		if (!strcmp(current->account, Account))
+			printf("%d %s %s %d年%d月%d日\n", ++num, current->account, current->name, current->year, current->month, current->day);
 		current = current->next;
-	} 
-	if (num == 0)printf("你未借阅任何书籍！");
+	}
+	if (num == 0)printf("未借阅任何书籍！");
 	fclose(fp);
 	printf("按任意键退出");
 	getchar();
@@ -428,25 +472,25 @@ void Rent_Film()
 } 
 void Return_Film()
 {
-	int num = 0;
+	int num = 0, filmc = 0;
 
-	//将当前用户和其他用户分成两条链表
+	//将当前用户和其他用户信息分成两条链表
 	struct userfilm*head1 = NULL,*prev1;
-	struct userfilm*head2 = NULL, *prev2;
+	struct userfilm*head2 = NULL,*prev2;
 	struct userfilm* current;
+
 	for (;;)
 	{
 		//打开电影文件
 		fp = fopen("film_date.txt", "r+");
 		while (!feof(fp))
 		{
-			num++;
-			fscanf(fp, "%s%s%d%d%s%d\n", filmlist[num].name, filmlist[num].national, &filmlist[num].type, &filmlist[num].quantity, filmlist[num].dir, &filmlist[num].year);
+			filmc++;
+			fscanf(fp, "%s%s%d%d%s%d\n", filmlist[filmc].name, filmlist[filmc].national, &filmlist[filmc].type, &filmlist[filmc].quantity, filmlist[filmc].dir, &filmlist[filmc].year);
 		}
 
-		//将文件中所有用户的信息形成链表
 		FILE*fp2 = fopen("rent_back.txt", "rb+");
-		while (!feof(fp2))                      //读到文件结尾,这里有坑，feod会多读一项
+		while (!feof(fp2))//读到文件结尾,这里有坑，feof会多读一项
 		{
 			current = (userfilm*)malloc(sizeof(userfilm));
 			if (fread(current, sizeof(userfilm), 1, fp2) == 0)break;
@@ -454,8 +498,8 @@ void Return_Film()
 			{
 				if (head1 == NULL)head1 = current;
 				else prev1->next = current;
-				current->next = NULL;                    //表明这是链表最后一项
-				prev1 = current;                          //current完成使命，即成为上一项
+				current->next = NULL;//表明这是链表最后一项                  
+				prev1 = current;//current完成使命，即成为上一项                          
 			}
 			else
 			{
@@ -471,35 +515,64 @@ void Return_Film()
 
 		//输出当前用户的借阅信息
 		current = head1; num = 0;
-		do {
+		while (current != NULL){
 			if (!strcmp(current->account, User.account))
 				printf("%d %s %s %d年%d月%d日\n", ++num, current->account, current->name, current->year, current->month, current->day);
 			current = current->next;
-		} while (current != NULL);
-
+		} 
+		
 		//选择归还
+		if (num == 0)
+		{
+			printf("未借阅书籍！"); return;
+		}
+		else {
+			printf("选择归还(1-%d):", num);
+			scanf("%d", &choice);
+		}
 
-		printf("选择归还(1-%d):", num);
-		scanf("%d", &choice);
+		//错误选择判断
 		while (choice<1 && choice>num)
 		{
 			printf("错误！重新选择:");
 			scanf("%d", &choice);
 		}
+
 		int j = 1; current = head1;
 		while (current != NULL)
 		{
-			if (choice == 1) { head1 = current->next; break; }//选择归还第一个，直接改变表头
+			//选择归还第一个，直接改变表头
+			if (choice == 1) {
+				for (int i = 1; i <= filmc; i++)
+				{
+					if (!strcmp(head1->name, filmlist[i].name))
+					{
+						filmlist[i].quantity++; break;
+					}
+				}
+				printf("你已经借阅%d天\n", Total_Days(head1->year, head1->month, head1->day));
+				head1 = current->next; break;
+			}
 			else {
+				for (int i = 1; i <= filmc; i++)
+				{
+					if (!strcmp(head1->name, filmlist[i].name))
+					{
+						filmlist[i].quantity++; break;
+					}
+				}
 				if ((choice - 1) == j) {
+					printf("你已经借阅%d天\n", Total_Days(current->next->year, current->next->month, current->next->day));
 					current->next = current->next->next; break;
 				}
 				else  current = current->next;
 			}
 			j++;
 		}
-		
-		fp2 = fopen("rent_back.txt", "w");//间接达到清空文件的目的
+
+		//间接达到清空文件的目的
+		fp2 = fopen("rent_back.txt", "w");
+	
 		//将当前用户信息存档
 		current = head1;
 		while (current != NULL)
@@ -507,6 +580,7 @@ void Return_Film()
 			fwrite(current, sizeof(userfilm), 1, fp2);
 			current = current->next;
 		}
+
 		//将其他用户信息存档
 		current = head2;
 		while (current != NULL)
@@ -515,10 +589,16 @@ void Return_Film()
 			current = current->next;
 		}
 		fclose(fp2);
+
+		//将电影信息归还
+		rewind(fp);
+		for (int j = 1; j <= num; j++)
+			fprintf(fp, "%s %s %d %d %s %d\n", filmlist[j].name, filmlist[j].national, filmlist[j].type, filmlist[j].quantity, filmlist[j].dir, filmlist[j].year);
 		fclose(fp);
 		
 		//是否继续
 		printf("归还成功！是否继续归还（Y/N）:");
+		getchar();
 		if (judge())continue;
 		else break;
 	}
@@ -535,10 +615,11 @@ void Alter_Film()
 		num++;
 		fscanf(fp, "%s%s%d%d%s%d\n", filmlist[num].name, filmlist[num].national, &filmlist[num].type, &filmlist[num].quantity, filmlist[num].dir, &filmlist[num].year);
 	}
-	printf("*******************图书信息***********************\n");
+	/*printf("*******************图书信息***********************\n");
 	printf("编号  影碟名     国家  类型  库存  导演  上映时间\n");
 	for (int i = 1; i <= num; i++)
 		printf("%-5d%-10s%5s%5d%5d%10s%5d\n", i, filmlist[i].name, filmlist[i].national, filmlist[i].type, filmlist[i].quantity, filmlist[i].dir, filmlist[i].year);
+	*/
 	int choice1, choice2;
 	
 	int flag = 1;
@@ -586,14 +667,41 @@ bool judge()
 	if (choice == 'y' || choice == 'Y')return true;
 	else return false;
 }
+int Sum(int y, int m, int d)
+{
+	int a = 0, k = 0, i;
+	if ((y % 4 == 0 && y % 100 != 0) || y % 400 == 0) {
+		k = 1;
+	}
+
+	for (i = 1; i<m; i++)
+	{
+
+		if (i == 2 && k == 1)
+			a += 29;
+		else if (i == 2)
+			a += 28;
+		else if (i == 1 || i == 3 || i == 5 || i == 7 || i == 8 || i == 10 || i == 12)
+			a += 31;
+		else
+			a += 30;
+	}
+	a += d;
+	return a;
+}
 int Total_Days(int year, int month, int days)
 {
-	//获取当前时间
-	time_t t;
+
+	time_t t; int y, m, d, s, k = 365;
 	struct tm * lt;
 	time(&t);
 	lt = localtime(&t);
-	int y = lt->tm_year + 1900;
-	int m = lt->tm_mon + 1;
-	int d = lt->tm_mday;
+	y = lt->tm_year + 1900;
+	m = lt->tm_mon + 1;
+	d = lt->tm_mday;
+	if ((year % 4 == 0 && year % 100 != 0) || year % 400 == 0) {
+		k = 366;
+	}
+	s = Sum(y, m, d) - Sum(year, month, days) + (y - year)*k;
+	return s;
 }
